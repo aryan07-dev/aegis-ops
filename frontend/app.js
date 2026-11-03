@@ -445,13 +445,26 @@
     if (isOutageSimulated) {
       failClosedIndicator.textContent = 'FAIL-CLOSED ACTIVE';
       failClosedIndicator.className = 'badge-mode badge-status badge-crimson';
+      demoOutagePathBtn.classList.add('outage-active');
+      demoOutagePathBtn.querySelector('.scenario-title').textContent = '4. Upstream Model Outage [FAIL-CLOSED ACTIVE]';
       appendLog('CHAOS_INJECT', 'block', '[CHAOS SIMULATION] Upstream LLM outage injected. Fail-closed safeguard engaged: all claims will be securely held in quarantine buffer.');
     } else {
       failClosedIndicator.textContent = 'STANDBY';
       failClosedIndicator.className = 'badge-mode';
+      demoOutagePathBtn.classList.remove('outage-active');
+      demoOutagePathBtn.querySelector('.scenario-title').textContent = '4. Upstream Model Outage';
       appendLog('CHAOS_RESTORE', 'pass', 'Upstream LLM connectivity restored. Normal execution resumed.');
     }
   }
+
+  // Keyboard Shortcuts for Judge Demos (Keys 1, 2, 3, 4)
+  document.addEventListener('keydown', (e) => {
+    if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+    if (e.key === '1') triggerHappyPathDemo();
+    if (e.key === '2') triggerHitlPathDemo();
+    if (e.key === '3') triggerViolationDemo();
+    if (e.key === '4') toggleModelOutage();
+  });
 
   // Judge Demo Trigger 1: Happy Path
   function triggerHappyPathDemo() {
