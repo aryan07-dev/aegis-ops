@@ -1,0 +1,159 @@
+{
+  "project": "aegis-ops",
+  "version": "1.0.0",
+  "base_url": "http://localhost:8000",
+  "endpoints": {
+    "submit_claim": {
+      "path": "/api/claims/run",
+      "method": "POST",
+      "request": {
+        "type": "object",
+        "required": ["employee_id", "vendor", "category", "amount", "notes"],
+        "properties": {
+          "employee_id": { "type": "string", "example": "EMP-402" },
+          "vendor": { "type": "string", "example": "AWS Cloud" },
+          "category": { "type": "string", "example": "Infrastructure" },
+          "amount": { "type": "number", "example": 420.00 },
+          "notes": { "type": "string", "example": "Q3 Server Cluster" }
+        }
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "trace_id": { "type": "string", "example": "trc_9a8f21" },
+          "status": { "type": "string", "enum": ["COMPLETED", "PAUSED_HITL", "BLOCKED", "FAILED_CLOSED"] },
+          "policy_verdict": { "type": "string", "enum": ["PASSED", "PAUSED_HITL", "BLOCKED"] },
+          "policy_rule_triggered": { "type": "string", "nullable": true, "example": "MAX_AUTO_APPROVE" },
+          "guardrail_latency_ms": { "type": "number", "example": 2.45 },
+          "total_latency_ms": { "type": "number", "example": 145.2 },
+          "claim": { "type": "object" },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "step_name": { "type": "string" },
+                "status": { "type": "string" },
+                "details": { "type": "string" },
+                "timestamp": { "type": "string" }
+              }
+            }
+          },
+          "error": { "type": "string", "nullable": true }
+        }
+      }
+    },
+    "get_traces": {
+      "path": "/api/claims/traces",
+      "method": "GET",
+      "response": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "trace_id": { "type": "string" },
+            "timestamp": { "type": "string" },
+            "employee_id": { "type": "string" },
+            "vendor": { "type": "string" },
+            "category": { "type": "string" },
+            "amount": { "type": "number" },
+            "notes": { "type": "string" },
+            "status": { "type": "string" },
+            "policy_verdict": { "type": "string" },
+            "guardrail_latency_ms": { "type": "number" },
+            "total_latency_ms": { "type": "number" },
+            "steps": { "type": "array" },
+            "review": { "type": "object", "nullable": true }
+          }
+        }
+      }
+    },
+    "approve_claim": {
+      "path": "/api/claims/{trace_id}/approve",
+      "method": "POST",
+      "request": {
+        "type": "object",
+        "required": ["decision"],
+        "properties": {
+          "decision": { "type": "string", "enum": ["APPROVE", "REJECT"], "example": "APPROVE" },
+          "reviewer_note": { "type": "string", "example": "Verified with VP" }
+        }
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "trace_id": { "type": "string" },
+          "status": { "type": "string", "enum": ["COMPLETED", "REJECTED", "ERROR"] },
+          "policy_verdict": { "type": "string" },
+          "reviewer_note": { "type": "string" },
+          "message": { "type": "string" },
+          "steps": { "type": "array" }
+        }
+      }
+    },
+    "run_eval": {
+      "path": "/api/eval/run",
+      "method": "GET",
+      "response": {
+        "type": "object",
+        "properties": {
+          "baseline": {
+            "type": "object",
+            "properties": {
+              "total_cases": { "type": "integer", "example": 20 },
+              "policy_compliance_pct": { "type": "number", "example": 60.0 },
+              "adversarial_leak_rate_pct": { "type": "number", "example": 40.0 },
+              "avg_latency_ms": { "type": "number", "example": 850.0 }
+            }
+          },
+          "governed": {
+            "type": "object",
+            "properties": {
+              "total_cases": { "type": "integer", "example": 20 },
+              "policy_compliance_pct": { "type": "number", "example": 100.0 },
+              "adversarial_leak_rate_pct": { "type": "number", "example": 0.0 },
+              "avg_guardrail_latency_ms": { "type": "number", "example": 3.8 },
+              "p95_guardrail_latency_ms": { "type": "number", "example": 6.2 },
+              "block_rate_pct": { "type": "number", "example": 50.0 }
+            }
+          },
+          "cases": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "description": { "type": "string" },
+                "claim": { "type": "object" },
+                "expected_verdict": { "type": "string" },
+                "baseline_verdict": { "type": "string" },
+                "governed_verdict": { "type": "string" },
+                "governed_rule": { "type": "string" },
+                "latency_ms": { "type": "number" },
+                "passed": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "simulate_model_outage": {
+      "path": "/api/simulate/model-outage",
+      "method": "POST",
+      "request": {
+        "type": "object",
+        "properties": {
+          "enabled": { "type": "boolean", "nullable": true }
+        }
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "model_outage_simulated": { "type": "boolean" },
+          "status": { "type": "string", "example": "FAIL_CLOSED_ACTIVE" },
+          "message": { "type": "string" }
+        }
+      }
+    }
+  }
+}
