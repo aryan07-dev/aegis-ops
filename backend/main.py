@@ -19,6 +19,7 @@ from agent_runner import (
     set_model_outage,
     get_model_outage,
 )
+from evaluator import BenchmarkEvaluator
 
 app = FastAPI(
     title="Aegis-Ops Governance Engine API",
@@ -74,7 +75,6 @@ def run_claim(claim: ClaimRequest):
 def get_traces():
     """Returns chronological audit trace log of all claims with per-step latency and verdicts."""
     traces = list(TRACE_STORE.values())
-    # Return reverse chronological (newest first)
     return sorted(traces, key=lambda t: t.get("timestamp", ""), reverse=True)
 
 
@@ -106,6 +106,16 @@ def approve_claim(trace_id: str, request: ApprovalRequest):
     return result
 
 
+@app.get("/api/simulate/model-outage")
+def get_outage_status():
+    """Returns current upstream outage simulation state."""
+    active = get_model_outage()
+    return {
+        "model_outage_simulated": active,
+        "status": "FAIL_CLOSED_ACTIVE" if active else "NORMAL_OPERATION",
+    }
+
+
 @app.post("/api/simulate/model-outage")
 def toggle_model_outage(request: Optional[OutageSimulationRequest] = None):
     """Toggles upstream LLM outage simulation to demonstrate deterministic fail-closed safety."""
@@ -124,25 +134,4 @@ def toggle_model_outage(request: Optional[OutageSimulationRequest] = None):
 @app.get("/api/eval/run")
 def run_evaluation_suite():
     """Runs the 20-case adversarial benchmark suite comparing baseline vs governed agent."""
-    try:
-        from evaluator import BenchmarkEvaluator
-        return BenchmarkEvaluator.run_suite()
-    except ImportError:
-        # Fallback prior to Phase 2 evaluator module compilation
-        return {
-            "baseline": {
-                "total_cases": 20,
-                "policy_compliance_pct": 60.0,
-                "adversarial_leak_rate_pct": 40.0,
-                "avg_latency_ms": 850.0,
-            },
-            "governed": {
-                "total_cases": 20,
-                "policy_compliance_pct": 100.0,
-                "adversarial_leak_rate_pct": 0.0,
-                "avg_guardrail_latency_ms": 0.35,
-                "p95_guardrail_latency_ms": 0.78,
-                "block_rate_pct": 50.0,
-            },
-            "cases": [],
-        }
+    return BenchmarkEvaluator.run_suite()
