@@ -2,10 +2,11 @@
 
 Provides REST endpoints for:
 - Autonomous claim execution with pre-tool policy guardrails
-- Audit trace history and live telemetry
+- Audit trace history and live telemetry with plain-English summaries & UI milestones
 - Human-in-the-Loop (HITL) approval actions
 - Fail-closed upstream outage simulation
 - 20-case evaluation benchmark runner
+- Realistic initial seed state for immediate dashboard readiness
 """
 
 from typing import Any, Dict, List, Optional
@@ -24,7 +25,7 @@ from evaluator import BenchmarkEvaluator
 app = FastAPI(
     title="Aegis-Ops Governance Engine API",
     description="Autonomous procurement & expense claim settlement agent with deterministic pre-tool guardrails.",
-    version="1.0.0",
+    version="1.1.0",
 )
 
 # CORS configuration for frontend operator console
@@ -35,6 +36,36 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def seed_initial_state() -> None:
+    """Pre-populates 2 realistic initial claims for clean and alive dashboard presentation."""
+    if not TRACE_STORE:
+        # Claim 1: Auto-approved $280 Datadog invoice
+        ProcurementAgent.run_claim({
+            "employee_id": "EMP-102",
+            "vendor": "Datadog",
+            "category": "Monitoring",
+            "amount": 280.00,
+            "notes": "Monthly APM infrastructure monitoring and synthetic trace ingestion",
+        })
+        # Claim 2: Paused $1,450 MacBook Pro purchase awaiting supervisor sign-off
+        ProcurementAgent.run_claim({
+            "employee_id": "EMP-304",
+            "vendor": "Apple",
+            "category": "Hardware",
+            "amount": 1450.00,
+            "notes": "MacBook Pro M3 upgrade for engineering workstation",
+        })
+
+
+# Populate seed data immediately upon module import
+seed_initial_state()
+
+
+@app.on_event("startup")
+def on_startup():
+    seed_initial_state()
 
 
 class ClaimRequest(BaseModel):
@@ -61,6 +92,7 @@ def read_root():
         "service": "Autonomous Enterprise Governance & Intervention System",
         "status": "OPERATIONAL",
         "model_outage_simulated": get_model_outage(),
+        "active_traces_count": len(TRACE_STORE),
     }
 
 
@@ -73,7 +105,7 @@ def run_claim(claim: ClaimRequest):
 
 @app.get("/api/claims/traces", response_model=List[Dict[str, Any]])
 def get_traces():
-    """Returns chronological audit trace log of all claims with per-step latency and verdicts."""
+    """Returns chronological audit trace log of all claims with human summaries and ui_steps."""
     traces = list(TRACE_STORE.values())
     return sorted(traces, key=lambda t: t.get("timestamp", ""), reverse=True)
 

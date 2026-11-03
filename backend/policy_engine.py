@@ -69,6 +69,7 @@ class PolicyEvaluationResult:
     verdict: str  # "PASSED", "PAUSED_HITL", "BLOCKED"
     rule_triggered: str  # "INJECTION_SHIELD", "HARD_CAP_BLOCK", "HITL_ESCALATION", "MAX_AUTO_APPROVE"
     reason: str
+    human_summary: str
     latency_ms: float
     details: Dict[str, Any]
 
@@ -78,6 +79,7 @@ class PolicyEvaluationResult:
             "verdict": self.verdict,
             "rule_triggered": self.rule_triggered,
             "reason": self.reason,
+            "human_summary": self.human_summary,
             "latency_ms": round(self.latency_ms, 3),
             "details": self.details,
         }
@@ -113,6 +115,7 @@ class PolicyEngine:
                     verdict="BLOCKED",
                     rule_triggered="INJECTION_SHIELD",
                     reason=f"Security alert: Adversarial prompt injection pattern detected ('{match.group(0)}')",
+                    human_summary="Blocked by Security Guardrail — Adversarial instruction override detected in claim notes.",
                     latency_ms=latency_ms,
                     details={"matched_pattern": match.group(0)},
                 )
@@ -127,6 +130,7 @@ class PolicyEngine:
                 verdict="BLOCKED",
                 rule_triggered="HARD_CAP_BLOCK",
                 reason=f"Policy violation: Vendor '{vendor}' is blacklisted in vendor registry.",
+                human_summary=f"Blocked by Policy — Vendor '{vendor}' is unverified or restricted in corporate registry.",
                 latency_ms=latency_ms,
                 details={"vendor": vendor, "vendor_status": "BANNED"},
             )
@@ -138,6 +142,7 @@ class PolicyEngine:
                 verdict="BLOCKED",
                 rule_triggered="HARD_CAP_BLOCK",
                 reason=f"Policy violation: Vendor '{vendor}' is not verified in corporate registry.",
+                human_summary=f"Blocked by Policy — Vendor '{vendor}' is unverified or restricted in corporate registry.",
                 latency_ms=latency_ms,
                 details={"vendor": vendor, "vendor_status": "UNVERIFIED"},
             )
@@ -149,6 +154,7 @@ class PolicyEngine:
                 verdict="BLOCKED",
                 rule_triggered="HARD_CAP_BLOCK",
                 reason=f"Policy violation: Claim amount (${amount:,.2f}) exceeds absolute threshold cap of ${cls.HITL_ESCALATION_LIMIT:,.2f}.",
+                human_summary="Blocked by Policy — Exceeds $5,000 single-transaction treasury cap.",
                 latency_ms=latency_ms,
                 details={"amount": amount, "cap": cls.HITL_ESCALATION_LIMIT},
             )
@@ -161,6 +167,7 @@ class PolicyEngine:
                 verdict="PAUSED_HITL",
                 rule_triggered="HITL_ESCALATION",
                 reason=f"Escalation required: Claim amount (${amount:,.2f}) exceeds auto-approval ceiling (${cls.MAX_AUTO_APPROVE_LIMIT:,.2f}). Human review required.",
+                human_summary=f"Awaiting Manager Sign-Off — Claim exceeds $500 auto-settlement limit (${amount:,.2f}).",
                 latency_ms=latency_ms,
                 details={
                     "amount": amount,
@@ -176,6 +183,7 @@ class PolicyEngine:
             verdict="PASSED",
             rule_triggered="MAX_AUTO_APPROVE",
             reason=f"Claim approved: Amount (${amount:,.2f}) is within automated settlement limit of ${cls.MAX_AUTO_APPROVE_LIMIT:,.2f}.",
+            human_summary="Approved automatically — Verified vendor within $500 instant-settlement tier.",
             latency_ms=latency_ms,
             details={"amount": amount, "auto_approved": True},
         )

@@ -7,6 +7,7 @@ Implements the 3-step tool execution pipeline:
 
 Guarded deterministically by PolicyEngine prior to executing privileged actions.
 Supports Human-in-the-Loop (HITL) pause/resume and fail-closed model outage handling.
+Enriched with human-friendly plain English summaries and 3-step UI milestones.
 """
 
 from datetime import datetime, timezone
@@ -131,6 +132,12 @@ class ProcurementAgent:
                 "details": "Claim held in secure retry escrow. Zero financial settlement authorized during upstream outage.",
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             })
+            human_summary = "Held in Safe Queue — Upstream model unavailable; failing closed to prevent unauthorized payout."
+            ui_steps = [
+                {"label": "Vendor Registry", "status": "warning"},
+                {"label": "Policy Guardrail", "status": "warning"},
+                {"label": "Treasury Payout", "status": "paused"},
+            ]
             trace_record = {
                 "trace_id": trace_id,
                 "timestamp": now_iso,
@@ -142,6 +149,8 @@ class ProcurementAgent:
                 "status": "FAILED_CLOSED",
                 "policy_verdict": "BLOCKED",
                 "policy_rule_triggered": "FAIL_CLOSED_OUTAGE_TRIP",
+                "human_summary": human_summary,
+                "ui_steps": ui_steps,
                 "guardrail_latency_ms": 0.15,
                 "total_latency_ms": round((time.perf_counter() - start_time) * 1000.0, 2),
                 "claim": claim,
@@ -174,6 +183,21 @@ class ProcurementAgent:
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             })
             total_latency_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
+            
+            # Determine milestone status based on violation type
+            if eval_result.rule_triggered == "INJECTION_SHIELD":
+                vendor_status = "done"
+            elif "unverified" in eval_result.reason.lower() or "blacklisted" in eval_result.reason.lower():
+                vendor_status = "error"
+            else:
+                vendor_status = "done"
+
+            ui_steps = [
+                {"label": "Vendor Registry", "status": vendor_status},
+                {"label": "Policy Guardrail", "status": "error"},
+                {"label": "Treasury Payout", "status": "blocked"},
+            ]
+
             trace_record = {
                 "trace_id": trace_id,
                 "timestamp": now_iso,
@@ -185,6 +209,8 @@ class ProcurementAgent:
                 "status": "BLOCKED",
                 "policy_verdict": eval_result.verdict,
                 "policy_rule_triggered": eval_result.rule_triggered,
+                "human_summary": eval_result.human_summary,
+                "ui_steps": ui_steps,
                 "guardrail_latency_ms": round(guardrail_latency_ms, 3),
                 "total_latency_ms": total_latency_ms,
                 "claim": claim,
@@ -226,6 +252,11 @@ class ProcurementAgent:
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             })
             total_latency_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
+            ui_steps = [
+                {"label": "Vendor Registry", "status": "done"},
+                {"label": "Policy Guardrail", "status": "warning"},
+                {"label": "Treasury Payout", "status": "paused"},
+            ]
             trace_record = {
                 "trace_id": trace_id,
                 "timestamp": now_iso,
@@ -237,6 +268,8 @@ class ProcurementAgent:
                 "status": "PAUSED_HITL",
                 "policy_verdict": eval_result.verdict,
                 "policy_rule_triggered": eval_result.rule_triggered,
+                "human_summary": eval_result.human_summary,
+                "ui_steps": ui_steps,
                 "guardrail_latency_ms": round(guardrail_latency_ms, 3),
                 "total_latency_ms": total_latency_ms,
                 "claim": claim,
@@ -258,6 +291,11 @@ class ProcurementAgent:
         })
 
         total_latency_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
+        ui_steps = [
+            {"label": "Vendor Registry", "status": "done"},
+            {"label": "Policy Guardrail", "status": "done"},
+            {"label": "Treasury Payout", "status": "done"},
+        ]
         trace_record = {
             "trace_id": trace_id,
             "timestamp": now_iso,
@@ -269,6 +307,8 @@ class ProcurementAgent:
             "status": "COMPLETED",
             "policy_verdict": eval_result.verdict,
             "policy_rule_triggered": eval_result.rule_triggered,
+            "human_summary": eval_result.human_summary,
+            "ui_steps": ui_steps,
             "guardrail_latency_ms": round(guardrail_latency_ms, 3),
             "total_latency_ms": total_latency_ms,
             "claim": claim,
@@ -299,6 +339,8 @@ class ProcurementAgent:
                 "trace_id": trace_id,
                 "status": trace["status"],
                 "message": f"Claim cannot be modified. Current status is {trace['status']}.",
+                "human_summary": trace.get("human_summary", ""),
+                "ui_steps": trace.get("ui_steps", []),
                 "steps": trace.get("steps", []),
             }
 
@@ -329,10 +371,21 @@ class ProcurementAgent:
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             })
             trace["status"] = "COMPLETED"
+            human_summary = "Approved by Manager — Override granted; treasury payout settled."
+            ui_steps = [
+                {"label": "Vendor Registry", "status": "done"},
+                {"label": "Policy Guardrail", "status": "warning"},
+                {"label": "Treasury Payout", "status": "done"},
+            ]
+            trace["human_summary"] = human_summary
+            trace["ui_steps"] = ui_steps
+
             return {
                 "trace_id": trace_id,
                 "status": "COMPLETED",
                 "policy_verdict": "PASSED_WITH_HITL_OVERRIDE",
+                "human_summary": human_summary,
+                "ui_steps": ui_steps,
                 "reviewer_note": reviewer_note,
                 "message": "Claim successfully approved and ledger payout dispatched.",
                 "steps": trace["steps"],
@@ -345,10 +398,21 @@ class ProcurementAgent:
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             })
             trace["status"] = "REJECTED"
+            human_summary = "Rejected by Manager — Claim terminated by supervisor; funds withheld."
+            ui_steps = [
+                {"label": "Vendor Registry", "status": "done"},
+                {"label": "Policy Guardrail", "status": "warning"},
+                {"label": "Treasury Payout", "status": "blocked"},
+            ]
+            trace["human_summary"] = human_summary
+            trace["ui_steps"] = ui_steps
+
             return {
                 "trace_id": trace_id,
                 "status": "REJECTED",
                 "policy_verdict": "REJECTED_BY_HUMAN",
+                "human_summary": human_summary,
+                "ui_steps": ui_steps,
                 "reviewer_note": reviewer_note,
                 "message": "Claim rejected by human supervisor. Funds withheld.",
                 "steps": trace["steps"],
