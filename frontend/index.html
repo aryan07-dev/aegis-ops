@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AEGIS-OPS // Autonomous Enterprise Governance & Intervention System</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="top-navbar">
+    <div class="brand-section">
+      <span class="brand-tag">AEGIS-OPS</span>
+      <span class="brand-title">AUTONOMOUS GOVERNANCE &amp; INTERVENTION SYSTEM</span>
+      <span class="brand-track">[TRACK 3: AMAZON GOVERNED AI AGENTS]</span>
+    </div>
+    <div class="system-telemetry-bar">
+      <div class="telemetry-node">
+        <span class="status-dot" id="system-status-dot"></span>
+        <span id="system-status-text">ENGINE: LIVE (PORT 8000)</span>
+      </div>
+      <div class="telemetry-node">
+        <span>GUARDRAIL:</span>
+        <span class="badge-mode">DETERMINISTIC PRE-TOOL</span>
+      </div>
+      <div class="telemetry-node">
+        <span>FAIL-CLOSED:</span>
+        <span class="badge-mode" id="fail-closed-indicator">STANDBY</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- 3-Column Operator Workspace Layout -->
+  <main class="workspace-grid">
+
+    <!-- COLUMN 1: Claim Dispatch & Demo Scenarios -->
+    <section class="workspace-col" id="col-dispatch">
+      <div class="col-header">
+        <span class="col-header-title">01 // Claim Dispatch Console</span>
+        <span class="col-header-meta">POST /api/claims/run</span>
+      </div>
+
+      <!-- Claim Submission Form -->
+      <div class="pane-section">
+        <div class="section-label">Structured Claim Payload</div>
+        <form id="claim-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="claim-emp">Employee ID</label>
+              <input class="form-input" type="text" id="claim-emp" value="EMP-402" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="claim-amount">Amount (USD)</label>
+              <input class="form-input" type="number" id="claim-amount" step="0.01" value="420.00" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="claim-vendor">Vendor Registry Entity</label>
+            <input class="form-input" type="text" id="claim-vendor" value="AWS Cloud" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="claim-category">Budget Category</label>
+            <select class="form-select" id="claim-category">
+              <option value="Infrastructure">Infrastructure</option>
+              <option value="Hardware Equipment">Hardware Equipment</option>
+              <option value="Software Licensing">Software Licensing</option>
+              <option value="Travel &amp; Entertainment">Travel &amp; Entertainment</option>
+              <option value="Consulting">Consulting</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="claim-notes">Expense Justification / Notes</label>
+            <textarea class="form-textarea" id="claim-notes" rows="2" placeholder="State operational reason...">Q3 Server Cluster renewal</textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="btn-submit-claim">
+            DISPATCH CLAIM TO AGENT
+          </button>
+        </form>
+      </div>
+
+      <!-- Judge Demo Scenarios (1-Click Pitch Vectors) -->
+      <div class="pane-section">
+        <div class="section-label">
+          <span>Judge Demo Vectors</span>
+          <span>[3-MIN PITCH]</span>
+        </div>
+        <div class="demo-scenarios-list">
+          <button type="button" class="btn btn-scenario scenario-happy" id="demo-happy-path">
+            <span class="scenario-title">1. Happy Path ($340 AWS Cloud)</span>
+            <span class="scenario-desc">Auto-clears Rule #1 (≤$500), runs all 3 pipeline tools.</span>
+          </button>
+
+          <button type="button" class="btn btn-scenario scenario-hitl" id="demo-hitl-path">
+            <span class="scenario-title">2. High-Risk Claim ($1,800 Hardware)</span>
+            <span class="scenario-desc">Halts at Tool 3, triggers Rule #2 Amber HITL card.</span>
+          </button>
+
+          <button type="button" class="btn btn-scenario scenario-violation" id="demo-violation-path">
+            <span class="scenario-title">3. Adversarial Injection ($9,000)</span>
+            <span class="scenario-desc">Rule #4 Injection Shield triggers instant Crimson block.</span>
+          </button>
+
+          <button type="button" class="btn btn-scenario scenario-outage" id="demo-outage-path">
+            <span class="scenario-title">4. Upstream Model Outage</span>
+            <span class="scenario-desc">Toggles failure mode: fail-closed quarantine demo.</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Guardrail Rules -->
+      <div class="pane-section">
+        <div class="section-label">Active Pre-Tool Guardrails</div>
+        <div class="rules-list">
+          <div class="rule-item">
+            <div class="rule-header">
+              <span class="rule-code">RULE_01_AUTO_APPROVE</span>
+              <span class="badge-status badge-emerald">ALLOWED</span>
+            </div>
+            <div class="rule-condition">Amount &le; $500.00 &amp; Verified Vendor</div>
+          </div>
+
+          <div class="rule-item">
+            <div class="rule-header">
+              <span class="rule-code">RULE_02_HITL_ESCALATION</span>
+              <span class="badge-status badge-amber">PAUSED_HITL</span>
+            </div>
+            <div class="rule-condition">Amount between $500.01 and $5,000.00</div>
+          </div>
+
+          <div class="rule-item">
+            <div class="rule-header">
+              <span class="rule-code">RULE_03_HARD_CAP_BLOCK</span>
+              <span class="badge-status badge-crimson">BLOCKED</span>
+            </div>
+            <div class="rule-condition">Amount &gt; $5,000.00 or Unregistered Vendor</div>
+          </div>
+
+          <div class="rule-item">
+            <div class="rule-header">
+              <span class="rule-code">RULE_04_INJECTION_SHIELD</span>
+              <span class="badge-status badge-crimson">SECURITY_BLOCK</span>
+            </div>
+            <div class="rule-condition">Regex scan for prompt override instructions</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COLUMN 2: Agent Execution Trace & Policy Inspector -->
+    <section class="workspace-col" id="col-trace">
+      <div class="col-header">
+        <span class="col-header-title">02 // Live Execution Trace &amp; Policy Gate</span>
+        <span class="col-header-meta" id="trace-meta-clock">LOG STREAM: READY</span>
+      </div>
+
+      <!-- Trace Metadata Action Bar -->
+      <div class="trace-action-bar">
+        <div class="trace-stat">
+          <span class="stat-key">TRACE_ID:</span>
+          <span class="stat-val" id="active-trace-id">TRC-STANDBY</span>
+        </div>
+        <div class="trace-stat">
+          <span class="stat-key">VERDICT:</span>
+          <span class="badge-status badge-cyan" id="active-trace-verdict">AWAITING_CLAIM</span>
+        </div>
+        <div class="trace-stat">
+          <span class="stat-key">POLICY LATENCY:</span>
+          <span class="stat-val" id="active-trace-latency">-- ms</span>
+        </div>
+        <div class="trace-stat">
+          <span class="stat-key">STEPS COMPLETED:</span>
+          <span class="stat-val" id="active-trace-steps">0 / 3</span>
+        </div>
+      </div>
+
+      <!-- Visual 3-Step Tool Pipeline Progression -->
+      <div class="pipeline-progress">
+        <div class="pipeline-step step-idle" id="step-node-1">
+          <div class="step-seq">STEP 01</div>
+          <div class="step-name">verify_vendor_tax_id</div>
+          <span class="step-status-tag" id="step-badge-1">IDLE</span>
+        </div>
+        <div class="pipeline-step step-idle" id="step-node-2">
+          <div class="step-seq">STEP 02</div>
+          <div class="step-name">check_department_budget</div>
+          <span class="step-status-tag" id="step-badge-2">IDLE</span>
+        </div>
+        <div class="pipeline-step step-idle" id="step-node-3">
+          <div class="step-seq">STEP 03</div>
+          <div class="step-name">execute_ledger_payout</div>
+          <span class="step-status-tag" id="step-badge-3">IDLE</span>
+        </div>
+      </div>
+
+      <!-- Execution Trace Monospace Log Container -->
+      <div class="trace-log-container" id="trace-log-container">
+        <div class="log-entry">
+          <span class="log-timestamp">[00:00:00.000]</span>
+          <span class="log-tag tag-info">SYS_INIT</span>
+          <span class="log-body">Aegis-Ops Deterministic Governance Engine initialized. Awaiting claim payload.</span>
+        </div>
+      </div>
+
+      <!-- Raw JSON Trace Drawer -->
+      <div class="json-drawer">
+        <div class="json-header">
+          <span class="section-label" style="margin-bottom: 0;">Structured Trace Response (JSON)</span>
+          <button type="button" class="btn" id="btn-copy-json" style="padding: 2px 6px; font-size: 10px;">COPY JSON</button>
+        </div>
+        <pre class="json-content" id="raw-json-output">{ "status": "AWAITING_CLAIM", "governance": "ACTIVE" }</pre>
+      </div>
+    </section>
+
+    <!-- COLUMN 3: Governance Metrics, HITL Queue & Eval Suite -->
+    <section class="workspace-col" id="col-governance">
+      <div class="col-header">
+        <span class="col-header-title">03 // Governance Telemetry &amp; HITL</span>
+        <span class="col-header-meta">REAL-TIME MONITOR</span>
+      </div>
+
+      <!-- HITL Approval Queue Section -->
+      <div class="pane-section">
+        <div class="section-label">
+          <span>Human-in-the-Loop (HITL) Queue</span>
+          <span id="hitl-queue-count" class="badge-status badge-cyan">0 PENDING</span>
+        </div>
+        <div class="hitl-queue-box" id="hitl-queue-container">
+          <div class="hitl-empty-msg" id="hitl-empty-msg">
+            No active claims awaiting human authorization.
+          </div>
+          <div class="hitl-card" id="hitl-active-card" style="display: none;">
+            <div class="hitl-badge" id="hitl-card-badge">INTERVENTION REQUIRED</div>
+            <div class="hitl-detail-row">
+              <span class="stat-key">Trace ID:</span>
+              <span class="stat-val" id="hitl-claim-id">TRC-8921</span>
+            </div>
+            <div class="hitl-detail-row">
+              <span class="stat-key">Employee:</span>
+              <span class="stat-val" id="hitl-claim-emp">EMP-219</span>
+            </div>
+            <div class="hitl-detail-row">
+              <span class="stat-key">Amount:</span>
+              <span class="stat-val" id="hitl-claim-amount">$1,800.00</span>
+            </div>
+            <div class="hitl-detail-row">
+              <span class="stat-key">Reason:</span>
+              <span class="stat-val" id="hitl-claim-rule" style="color: var(--badge-amber-text);">RULE #2 HITL_ESCALATION</span>
+            </div>
+
+            <div class="form-group" style="margin-top: 8px;">
+              <label class="form-label" for="hitl-reviewer-note">Reviewer Note / Justification</label>
+              <input class="form-input" type="text" id="hitl-reviewer-note" value="Verified with VP of Operations">
+            </div>
+
+            <div class="hitl-actions">
+              <button type="button" class="btn btn-emerald" id="btn-hitl-approve">
+                APPROVE OVERRIDE
+              </button>
+              <button type="button" class="btn btn-crimson" id="btn-hitl-reject">
+                REJECT &amp; TERMINATE
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real-Time Telemetry Metrics -->
+      <div class="pane-section">
+        <div class="section-label">Telemetry &amp; Enforcement Scorecard</div>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-label">Baseline Safety</div>
+            <div class="metric-value amber" id="metric-baseline-safety">60.0%</div>
+            <div class="metric-sub">Raw LLM (Unguarded)</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-label">Aegis Governed Safety</div>
+            <div class="metric-value emerald" id="metric-aegis-safety">100.0%</div>
+            <div class="metric-sub">Pre-Tool Guardrails</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-label">Interception Overhead</div>
+            <div class="metric-value cyan" id="metric-latency">4.2 ms</div>
+            <div class="metric-sub">Target &lt; 15.0 ms</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-label">Enforced Checks</div>
+            <div class="metric-value" id="metric-checks-count">0</div>
+            <div class="metric-sub">Claims Intercepted</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 20-Case Adversarial Benchmark Evaluation Suite -->
+      <div class="pane-section">
+        <div class="section-label">
+          <span>20-Case Benchmark Suite</span>
+          <button type="button" class="btn" id="btn-run-eval" style="padding: 2px 8px; font-size: 10px;">
+            RUN EVAL SUITE
+          </button>
+        </div>
+        <div class="benchmark-table-wrapper">
+          <table class="benchmark-table" id="benchmark-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Category</th>
+                <th>Amount</th>
+                <th>Baseline</th>
+                <th>Aegis</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="benchmark-tbody">
+              <!-- Dynamically populated rows from /api/eval/run or mock_fallback.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="mock_fallback.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
