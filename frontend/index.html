@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aegis Procurement Guard // Autonomous FinTech Governance</title>
+  <title>Aegis Procurement Guard // Autonomous Enterprise Governance</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -22,17 +22,22 @@
         </div>
       </div>
 
-      <!-- 2-Tab View Switcher -->
+      <!-- 3-Tab View Switcher -->
       <nav class="nav-tab-group" aria-label="Main Navigation">
         <button type="button" class="nav-tab-btn active" id="tab-operations">Live Operations</button>
-        <button type="button" class="nav-tab-btn" id="tab-benchmark">Benchmark Scorecard — 20 Cases</button>
+        <button type="button" class="nav-tab-btn" id="tab-runtime">AgentCore Runtime</button>
+        <button type="button" class="nav-tab-btn" id="tab-benchmark">Evaluation Scorecard — 20 Cases</button>
       </nav>
 
-      <!-- System Status Cluster -->
+      <!-- System Status Cluster & Environment Switcher -->
       <div class="system-status-cluster">
+        <button type="button" class="env-switcher-badge" id="env-switcher-btn" title="Click to toggle runtime environment">
+          <span style="font-size: 10px;">&#9656;</span>
+          <span id="env-badge-label">AWS us-east-1 &middot; Bedrock Production</span>
+        </button>
         <div class="status-pill-indicator">
           <span class="status-dot" id="system-status-dot"></span>
-          <span id="system-status-text">Engine Live: Port 8000</span>
+          <span id="system-status-text">Backend Live: Port 8000</span>
         </div>
         <div class="status-pill-indicator">
           <span>Fail-Closed:</span>
@@ -56,7 +61,7 @@
       <div class="summary-card">
         <div class="summary-label">Avg Guardrail Latency</div>
         <div class="summary-value highlight-pine" id="metric-latency">&lt; 15 ms</div>
-        <div class="summary-caption">Pre-execution overhead overhead</div>
+        <div class="summary-caption">Pre-execution overhead (Amazon Bedrock)</div>
       </div>
 
       <div class="summary-card">
@@ -66,11 +71,13 @@
       </div>
     </section>
 
-    <!-- VIEW 1: LIVE OPERATIONS WORKSPACE -->
-    <div id="view-operations" class="view-operations-container">
+    <!-- =====================================================================
+         TAB PANE 1: LIVE OPERATIONS WORKSPACE
+         ===================================================================== -->
+    <section id="view-operations" class="tab-pane active" aria-label="Live Operations">
       <div class="workspace-layout">
 
-        <!-- LEFT COLUMN: Quick Dispatch & Collapsible Form (360px) -->
+        <!-- LEFT COLUMN: Quick Dispatch, Nova Act Preview & Collapsible Form (360px) -->
         <aside class="workspace-col-left">
           <div class="column-title-group">
             <span class="column-title">Demo Dispatch</span>
@@ -114,6 +121,38 @@
               <div class="demo-card-meta">Chaos Injection &middot; Model Offline</div>
               <p class="demo-card-desc">Forces upstream LLM offline to verify claims are held safely in quarantine.</p>
             </button>
+          </div>
+
+          <!-- Nova Act Browser Stream Preview Card -->
+          <div class="nova-preview-card" id="nova-preview-card">
+            <div class="nova-header">
+              <div class="nova-title">
+                <span class="nova-pulse-indicator" id="nova-pulse-indicator"></span>
+                <span>Nova Act Browser Stream</span>
+              </div>
+              <span class="status-pill pill-approved" id="nova-status-tag" style="font-size: 10px;">Standby</span>
+            </div>
+            <div class="nova-url-bar" id="nova-url-bar">
+              https://vendor-registry.internal.amazon.com/verify
+            </div>
+            <div class="nova-steps-list">
+              <div class="nova-step-item" id="nova-step-1">
+                <span class="nova-step-dot"></span>
+                <span>Step 1: Ingesting claim payload &amp; vendor token...</span>
+              </div>
+              <div class="nova-step-item" id="nova-step-2">
+                <span class="nova-step-dot"></span>
+                <span>Step 2: Resolving tax registry EIN &amp; federal status...</span>
+              </div>
+              <div class="nova-step-item" id="nova-step-3">
+                <span class="nova-step-dot"></span>
+                <span>Step 3: Checking department budget allocations...</span>
+              </div>
+              <div class="nova-step-item" id="nova-step-4">
+                <span class="nova-step-dot"></span>
+                <span>Step 4: Executing ledger payout transaction...</span>
+              </div>
+            </div>
           </div>
 
           <!-- Collapsible Custom Expense Form Drawer -->
@@ -165,7 +204,7 @@
           </div>
         </aside>
 
-        <!-- RIGHT COLUMN: Human-Friendly Activity Stream (1fr) -->
+        <!-- RIGHT COLUMN: Human Approval Banner & Activity Stream (1fr) -->
         <section class="workspace-col-right">
 
           <!-- Prominent Human Approval Banner (Only visible on PAUSED_HITL) -->
@@ -231,10 +270,188 @@
         </section>
 
       </div>
-    </div>
+    </section>
 
-    <!-- VIEW 2: BENCHMARK SCORECARD (20-CASE SUITE) -->
-    <div id="view-benchmark" class="view-benchmark-container">
+    <!-- =====================================================================
+         TAB PANE 2: AMAZON ENTERPRISE & AGENTCORE RUNTIME PANEL
+         ===================================================================== -->
+    <section id="view-runtime" class="tab-pane" aria-label="Amazon AgentCore Runtime">
+
+      <!-- Hero Header Card -->
+      <div class="runtime-hero-card">
+        <div class="runtime-hero-header">
+          <div class="runtime-hero-title">
+            <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #137333;"></span>
+            <span>Amazon Bedrock &amp; AgentCore Enterprise Architecture</span>
+          </div>
+          <span class="status-pill pill-approved" id="runtime-live-badge">Live Runtime Active</span>
+        </div>
+        <p class="runtime-hero-desc">
+          Aegis-Ops deploys autonomous agentic decision loops on top of Amazon Bedrock and AgentCore. Natural-language enterprise policies are evaluated deterministically before any financial or ledger tool can execute, preventing adversarial overrides, over-budget claims, and unverified vendor payments.
+        </p>
+
+        <!-- Runtime Metadata Grid -->
+        <div class="runtime-meta-grid">
+          <div class="runtime-meta-item">
+            <span class="runtime-meta-label">Active AWS Region</span>
+            <span class="runtime-meta-val" id="meta-region">us-east-1 (N. Virginia)</span>
+          </div>
+          <div class="runtime-meta-item">
+            <span class="runtime-meta-label">Foundation Model</span>
+            <span class="runtime-meta-val" id="meta-model">Anthropic Claude 3.5 Sonnet</span>
+          </div>
+          <div class="runtime-meta-item">
+            <span class="runtime-meta-label">AgentCore Guardrails</span>
+            <span class="runtime-meta-val" style="color: #137333;">Deterministic Fail-Closed</span>
+          </div>
+          <div class="runtime-meta-item">
+            <span class="runtime-meta-label">Browser Automation</span>
+            <span class="runtime-meta-val">Nova Act Headless Stream</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2-Column Runtime Layout -->
+      <div class="runtime-grid">
+
+        <!-- Column 1: AgentCore Natural Language Policies -->
+        <div class="runtime-card-col">
+          <div class="runtime-box">
+            <div class="runtime-box-header">
+              <span class="runtime-box-title">AgentCore Natural-Language Policies</span>
+              <span class="status-pill pill-approved" style="font-size: 10px;">4 Active Rules</span>
+            </div>
+
+            <div class="policy-card-list">
+              <!-- Policy 1 -->
+              <div class="policy-spec-card" id="pol-card-1">
+                <div class="policy-spec-top">
+                  <span class="policy-spec-code">AC-POL-01: Micro-Purchase Autonomous Threshold</span>
+                  <span class="status-pill pill-approved" style="font-size: 10px;">Pre-Tool Auto</span>
+                </div>
+                <div class="policy-spec-nl">
+                  "All verified software and infrastructure claims under $500.00 execute automatically through `execute_ledger_payout` without manual intervention."
+                </div>
+                <div class="policy-spec-meta">
+                  <span>Target Tool: execute_ledger_payout</span>
+                  <span>Cap: &le; $500.00</span>
+                </div>
+              </div>
+
+              <!-- Policy 2 -->
+              <div class="policy-spec-card" id="pol-card-2">
+                <div class="policy-spec-top">
+                  <span class="policy-spec-code">AC-POL-02: Human-in-the-Loop Escalation Gate</span>
+                  <span class="status-pill pill-pending" style="font-size: 10px;">HITL Webhook</span>
+                </div>
+                <div class="policy-spec-nl">
+                  "Any claim between $500.01 and $5,000.00 must pause execution before ledger settlement, trigger Amazon SNS notification, and require supervisor sign-off."
+                </div>
+                <div class="policy-spec-meta">
+                  <span>Target Tool: execute_ledger_payout</span>
+                  <span>Range: $500.01 – $5,000.00</span>
+                </div>
+              </div>
+
+              <!-- Policy 3 -->
+              <div class="policy-spec-card" id="pol-card-3">
+                <div class="policy-spec-top">
+                  <span class="policy-spec-code">AC-POL-03: Hard Financial Cap &amp; Registry Validation</span>
+                  <span class="status-pill pill-blocked" style="font-size: 10px;">Strict Block</span>
+                </div>
+                <div class="policy-spec-nl">
+                  "Hard block on claims over $5,000.00 or with unverified vendor tax IDs. Terminate transaction immediately fail-safe."
+                </div>
+                <div class="policy-spec-meta">
+                  <span>Target Tool: verify_vendor_tax_id</span>
+                  <span>Cap: &gt; $5,000.00</span>
+                </div>
+              </div>
+
+              <!-- Policy 4 -->
+              <div class="policy-spec-card" id="pol-card-4">
+                <div class="policy-spec-top">
+                  <span class="policy-spec-code">AC-POL-04: Bedrock Guardrails Prompt Injection Shield</span>
+                  <span class="status-pill pill-blocked" style="font-size: 10px;">Security Shield</span>
+                </div>
+                <div class="policy-spec-nl">
+                  "Detect and block adversarial attempts to override policy rules, claim administrative privileges, or spoof authorization tokens."
+                </div>
+                <div class="policy-spec-meta">
+                  <span>Target: Pre-Execution Context</span>
+                  <span>Mode: Instant Quarantine</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 2: Nova Act Browser UI Automation Simulation -->
+        <div class="runtime-card-col">
+          <div class="runtime-box">
+            <div class="runtime-box-header">
+              <span class="runtime-box-title">Nova Act Browser Automation Stream</span>
+              <span class="status-pill pill-approved" style="font-size: 10px;">Autonomous UI Agent</span>
+            </div>
+
+            <!-- Simulated Browser UI Chrome -->
+            <div class="nova-console-box">
+              <div class="nova-browser-bar">
+                <div class="browser-lights">
+                  <span class="browser-light"></span>
+                  <span class="browser-light"></span>
+                  <span class="browser-light"></span>
+                </div>
+                <div class="browser-address tabular-nums" id="nova-full-address">
+                  https://vendor-registry.internal.aws.amazon.com/verify?ein=US-47-1982341
+                </div>
+              </div>
+
+              <div class="nova-timeline">
+                <div class="nova-step-row step-done" id="nova-tl-step-1">
+                  <span class="nova-step-badge">1</span>
+                  <div class="nova-step-details">
+                    <div class="nova-step-title">Navigating Internal Vendor Portal</div>
+                    <div class="nova-step-sub">Headless browser session resolved internal DNS and authenticated corporate SSO.</div>
+                  </div>
+                </div>
+
+                <div class="nova-step-row step-done" id="nova-tl-step-2">
+                  <span class="nova-step-badge">2</span>
+                  <div class="nova-step-details">
+                    <div class="nova-step-title">Extracting Corporate EIN &amp; Active Tax Status</div>
+                    <div class="nova-step-sub">Cross-checked federal tax status US-47-1982341 against IRS active registry.</div>
+                  </div>
+                </div>
+
+                <div class="nova-step-row step-active" id="nova-tl-step-3">
+                  <span class="nova-step-badge">3</span>
+                  <div class="nova-step-details">
+                    <div class="nova-step-title">Validating Against Amazon Compliance Ledger</div>
+                    <div class="nova-step-sub">Checking department cost-center allocation balance and AgentCore policy boundaries.</div>
+                  </div>
+                </div>
+
+                <div class="nova-step-row" id="nova-tl-step-4">
+                  <span class="nova-step-badge">4</span>
+                  <div class="nova-step-details">
+                    <div class="nova-step-title">Executing Financial Transfer via Treasury API</div>
+                    <div class="nova-step-sub">Dispatching cryptographic settlement payload to corporate treasury gateway.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- =====================================================================
+         TAB PANE 3: EVALUATION SCORECARD (20 CASES)
+         ===================================================================== -->
+    <section id="view-benchmark" class="tab-pane" aria-label="Evaluation Scorecard">
 
       <!-- Hero Header Card -->
       <div class="benchmark-hero-card">
@@ -286,13 +503,13 @@
               </tr>
             </thead>
             <tbody id="benchmark-tbody">
-              <!-- Dynamically rendered -->
+              <!-- Dynamically populated -->
             </tbody>
           </table>
         </div>
       </div>
 
-    </div>
+    </section>
 
   </main>
 

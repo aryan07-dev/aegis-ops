@@ -1,6 +1,7 @@
 /**
  * AEGIS PROCUREMENT GUARD // MODERN FINTECH CONSOLE
- * App Logic: View Switcher, Human-Centric Activity Stream, Progressive Disclosure Trace Accordions,
+ * App Logic: 3-Tab View Switcher, Amazon Bedrock & AgentCore Runtime Simulator,
+ * Nova Act Browser Automation Stream, Progressive Disclosure Trace Accordions,
  * HITL Approval Banner, 1-Click Pitch Scenarios, and Benchmark Scorecard.
  */
 
@@ -12,9 +13,17 @@
 
   // DOM Elements - Navigation & Views
   const tabOperations = document.getElementById('tab-operations');
+  const tabRuntime = document.getElementById('tab-runtime');
   const tabBenchmark = document.getElementById('tab-benchmark');
   const viewOperations = document.getElementById('view-operations');
+  const viewRuntime = document.getElementById('view-runtime');
   const viewBenchmark = document.getElementById('view-benchmark');
+
+  // Environment Switcher
+  const envSwitcherBtn = document.getElementById('env-switcher-btn');
+  const envBadgeLabel = document.getElementById('env-badge-label');
+  const metaRegion = document.getElementById('meta-region');
+  const metaModel = document.getElementById('meta-model');
 
   // Status Indicators
   const systemStatusDot = document.getElementById('system-status-dot');
@@ -34,6 +43,28 @@
   const demoOutagePathBtn = document.getElementById('demo-outage-path');
   const outageCardTitle = document.getElementById('outage-card-title');
   const outageCardPill = document.getElementById('outage-card-pill');
+
+  // Nova Act Browser Stream Preview (Left Column)
+  const novaPreviewCard = document.getElementById('nova-preview-card');
+  const novaStatusTag = document.getElementById('nova-status-tag');
+  const novaUrlBar = document.getElementById('nova-url-bar');
+  const novaStep1 = document.getElementById('nova-step-1');
+  const novaStep2 = document.getElementById('nova-step-2');
+  const novaStep3 = document.getElementById('nova-step-3');
+  const novaStep4 = document.getElementById('nova-step-4');
+
+  // Runtime Tab Nova Timeline
+  const novaTlStep1 = document.getElementById('nova-tl-step-1');
+  const novaTlStep2 = document.getElementById('nova-tl-step-2');
+  const novaTlStep3 = document.getElementById('nova-tl-step-3');
+  const novaTlStep4 = document.getElementById('nova-tl-step-4');
+  const novaFullAddress = document.getElementById('nova-full-address');
+
+  // Policy Spec Cards (Runtime Tab)
+  const polCard1 = document.getElementById('pol-card-1');
+  const polCard2 = document.getElementById('pol-card-2');
+  const polCard3 = document.getElementById('pol-card-3');
+  const polCard4 = document.getElementById('pol-card-4');
 
   // Custom Form Drawer
   const customDrawer = document.getElementById('custom-expense-drawer');
@@ -74,26 +105,50 @@
   let activePendingHitlTrace = null;
   let processedCount = 0;
   let cardMap = {}; // trace_id -> DOM element
+  let isProductionEnv = true;
 
   // =========================================================================
-  // 1. NAVIGATION & TAB SWITCHER
+  // 1. NAVIGATION & 3-TAB VIEW SWITCHER
   // =========================================================================
   function switchTab(target) {
-    if (target === 'operations') {
-      tabOperations.classList.add('active');
-      tabBenchmark.classList.remove('active');
-      viewOperations.style.display = 'block';
-      viewBenchmark.style.display = 'none';
-    } else {
-      tabBenchmark.classList.add('active');
-      tabOperations.classList.remove('active');
-      viewOperations.style.display = 'none';
-      viewBenchmark.style.display = 'block';
-    }
+    const tabs = [
+      { btn: tabOperations, pane: viewOperations, name: 'operations' },
+      { btn: tabRuntime, pane: viewRuntime, name: 'runtime' },
+      { btn: tabBenchmark, pane: viewBenchmark, name: 'benchmark' }
+    ];
+
+    tabs.forEach((t) => {
+      if (t.name === target) {
+        t.btn.classList.add('active');
+        t.pane.classList.add('active');
+      } else {
+        t.btn.classList.remove('active');
+        t.pane.classList.remove('active');
+      }
+    });
   }
 
   tabOperations.addEventListener('click', () => switchTab('operations'));
+  tabRuntime.addEventListener('click', () => switchTab('runtime'));
   tabBenchmark.addEventListener('click', () => switchTab('benchmark'));
+
+  // Environment Switcher Toggle
+  envSwitcherBtn.addEventListener('click', () => {
+    isProductionEnv = !isProductionEnv;
+    if (isProductionEnv) {
+      envBadgeLabel.textContent = 'AWS us-east-1 · Bedrock Production';
+      if (metaRegion) metaRegion.textContent = 'us-east-1 (N. Virginia)';
+      if (metaModel) metaModel.textContent = 'Anthropic Claude 3.5 Sonnet';
+      envSwitcherBtn.style.color = 'var(--brand-aws-text)';
+      envSwitcherBtn.style.backgroundColor = 'var(--brand-aws-tint)';
+    } else {
+      envBadgeLabel.textContent = 'Sandbox / Testnet Isolated';
+      if (metaRegion) metaRegion.textContent = 'local-sandbox (Mock)';
+      if (metaModel) metaModel.textContent = 'Synthetic Agent Evaluator';
+      envSwitcherBtn.style.color = 'var(--text-secondary)';
+      envSwitcherBtn.style.backgroundColor = 'var(--bg-surface-subtle)';
+    }
+  });
 
   // Collapsible Custom Drawer
   drawerToggleBtn.addEventListener('click', () => {
@@ -101,12 +156,12 @@
   });
 
   // =========================================================================
-  // 2. BACKEND HEALTH CHECK
+  // 2. BACKEND HEALTH CHECK & INITIAL STATE INGESTION
   // =========================================================================
   async function checkBackendConnection() {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 1200);
+      const timeoutId = setTimeout(() => controller.abort(), 1500);
       const res = await fetch(`${BACKEND_URL}/api/claims/traces`, {
         method: 'GET',
         signal: controller.signal
@@ -116,25 +171,189 @@
       if (res.ok) {
         isBackendLive = true;
         systemStatusDot.className = 'status-dot';
-        systemStatusText.textContent = 'Engine Live: Port 8000';
+        systemStatusText.textContent = 'Backend Live: Port 8000';
+
+        const traces = await res.json();
+        if (Array.isArray(traces) && traces.length > 0) {
+          // Render backend seed traces into the activity stream
+          traces.reverse().forEach((trace) => {
+            if (!cardMap[trace.trace_id]) {
+              processedCount++;
+              renderTransactionCard(trace);
+              if (trace.status === 'PAUSED_HITL' || trace.verdict === 'PAUSED_HITL') {
+                showApprovalBanner(trace);
+              }
+            }
+          });
+          activityCounter.textContent = `${processedCount} processed`;
+        }
       } else {
         throw new Error('Non-200');
       }
     } catch (e) {
       isBackendLive = false;
       systemStatusDot.className = 'status-dot amber';
-      systemStatusText.textContent = 'Offline Fallback Active';
+      systemStatusText.textContent = 'Offline Resilience Active';
+
+      // Load initial offline mock seed data if available
+      loadOfflineSeedData();
+    }
+  }
+
+  function loadOfflineSeedData() {
+    if (processedCount > 0) return;
+    const seed1 = {
+      trace_id: 'TRC-1092',
+      timestamp: new Date().toISOString(),
+      claim: {
+        employee_id: 'EMP-102',
+        vendor: 'Datadog',
+        category: 'Monitoring',
+        amount: 280.00,
+        notes: 'Monthly APM infrastructure monitoring and synthetic trace ingestion'
+      },
+      verdict: 'PASSED',
+      policy_verdict: {
+        rule: 'RULE_01_MAX_AUTO_APPROVE',
+        reason: 'Claim amount ($280.00) meets auto-clearance threshold (<= $500.00) with verified vendor.'
+      },
+      guardrail_latency_ms: 2.4,
+      steps: [
+        { name: 'verify_vendor_tax_id', status: 'PASSED', output: { tax_id: 'US-13-4491028', status: 'VERIFIED' } },
+        { name: 'check_department_budget', status: 'PASSED', output: { available_budget: 35680.00 } },
+        { name: 'execute_ledger_payout', status: 'PASSED', output: { transaction_id: 'TXN-902194', settlement: 'COMPLETED' } }
+      ]
+    };
+
+    const seed2 = {
+      trace_id: 'TRC-1845',
+      timestamp: new Date().toISOString(),
+      claim: {
+        employee_id: 'EMP-304',
+        vendor: 'Dell Enterprise',
+        category: 'Hardware',
+        amount: 1450.00,
+        notes: 'Developer workstation hardware upgrade'
+      },
+      verdict: 'PAUSED_HITL',
+      policy_verdict: {
+        rule: 'RULE_02_HITL_ESCALATION',
+        reason: 'Claim amount ($1,450.00) is between $500.01 and $5,000.00. Halting for mandatory Human-in-the-Loop approval.'
+      },
+      guardrail_latency_ms: 3.6,
+      steps: [
+        { name: 'verify_vendor_tax_id', status: 'PASSED', output: { tax_id: 'US-74-2489210', status: 'VERIFIED' } },
+        { name: 'check_department_budget', status: 'PASSED', output: { available_budget: 34230.00 } },
+        { name: 'execute_ledger_payout', status: 'PAUSED_HITL', output: { state: 'AWAITING_HUMAN_SIGN_OFF' } }
+      ]
+    };
+
+    processedCount += 2;
+    renderTransactionCard(seed1);
+    renderTransactionCard(seed2);
+    showApprovalBanner(seed2);
+    activityCounter.textContent = `${processedCount} processed`;
+  }
+
+  // =========================================================================
+  // 3. NOVA ACT BROWSER AUTOMATION STREAM SIMULATOR
+  // =========================================================================
+  function updateNovaActStream(claim, verdict, rule) {
+    const vendorEncoded = encodeURIComponent(claim.vendor || 'AWS Cloud');
+    const targetUrl = `https://vendor-registry.internal.amazon.com/verify?vendor=${vendorEncoded}&ein=US-47-1982341`;
+
+    if (novaUrlBar) novaUrlBar.textContent = targetUrl;
+    if (novaFullAddress) novaFullAddress.textContent = targetUrl;
+
+    if (novaStatusTag) {
+      novaStatusTag.className = 'status-pill pill-pending';
+      novaStatusTag.textContent = 'Agent Running...';
+    }
+
+    // Step progression animation
+    const steps = [
+      { el: novaStep1, tl: novaTlStep1 },
+      { el: novaStep2, tl: novaTlStep2 },
+      { el: novaStep3, tl: novaTlStep3 },
+      { el: novaStep4, tl: novaTlStep4 }
+    ];
+
+    steps.forEach((s) => {
+      if (s.el) s.el.className = 'nova-step-item';
+      if (s.tl) s.tl.className = 'nova-step-row';
+    });
+
+    if (steps[0].el) steps[0].el.className = 'nova-step-item active';
+    if (steps[0].tl) steps[0].tl.className = 'nova-step-row step-active';
+
+    setTimeout(() => {
+      if (steps[0].el) steps[0].el.className = 'nova-step-item completed';
+      if (steps[0].tl) steps[0].tl.className = 'nova-step-row step-done';
+      if (steps[1].el) steps[1].el.className = 'nova-step-item active';
+      if (steps[1].tl) steps[1].tl.className = 'nova-step-row step-active';
+    }, 180);
+
+    setTimeout(() => {
+      if (steps[1].el) steps[1].el.className = 'nova-step-item completed';
+      if (steps[1].tl) steps[1].tl.className = 'nova-step-row step-done';
+      if (steps[2].el) steps[2].el.className = 'nova-step-item active';
+      if (steps[2].tl) steps[2].tl.className = 'nova-step-row step-active';
+    }, 360);
+
+    setTimeout(() => {
+      if (verdict === 'PASSED' || verdict === 'ALLOWED') {
+        if (steps[2].el) steps[2].el.className = 'nova-step-item completed';
+        if (steps[2].tl) steps[2].tl.className = 'nova-step-row step-done';
+        if (steps[3].el) steps[3].el.className = 'nova-step-item completed';
+        if (steps[3].tl) steps[3].tl.className = 'nova-step-row step-done';
+        if (novaStatusTag) {
+          novaStatusTag.className = 'status-pill pill-approved';
+          novaStatusTag.textContent = 'Settled & Verified';
+        }
+      } else if (verdict === 'PAUSED_HITL') {
+        if (steps[2].el) steps[2].el.className = 'nova-step-item active';
+        if (steps[2].tl) steps[2].tl.className = 'nova-step-row step-active';
+        if (steps[3].el) steps[3].el.className = 'nova-step-item';
+        if (steps[3].tl) steps[3].tl.className = 'nova-step-row';
+        if (novaStatusTag) {
+          novaStatusTag.className = 'status-pill pill-pending';
+          novaStatusTag.textContent = 'Halted: Supervisor Sign-off';
+        }
+      } else {
+        if (steps[2].el) steps[2].el.className = 'nova-step-item';
+        if (steps[2].tl) steps[2].tl.className = 'nova-step-row';
+        if (steps[3].el) steps[3].el.className = 'nova-step-item';
+        if (steps[3].tl) steps[3].tl.className = 'nova-step-row';
+        if (novaStatusTag) {
+          novaStatusTag.className = 'status-pill pill-blocked';
+          novaStatusTag.textContent = 'Blocked by Guardrail';
+        }
+      }
+    }, 540);
+
+    // Highlight Policy Spec card on Runtime Tab
+    [polCard1, polCard2, polCard3, polCard4].forEach((c) => {
+      if (c) c.classList.remove('highlight-rule');
+    });
+
+    if (rule?.includes('01') || rule?.includes('AUTO') || verdict === 'PASSED') {
+      if (polCard1) polCard1.classList.add('highlight-rule');
+    } else if (rule?.includes('02') || rule?.includes('HITL') || verdict === 'PAUSED_HITL') {
+      if (polCard2) polCard2.classList.add('highlight-rule');
+    } else if (rule?.includes('03') || rule?.includes('HARD_CAP')) {
+      if (polCard3) polCard3.classList.add('highlight-rule');
+    } else if (rule?.includes('04') || rule?.includes('INJECTION')) {
+      if (polCard4) polCard4.classList.add('highlight-rule');
     }
   }
 
   // =========================================================================
-  // 3. CLAIM DISPATCH & EXECUTION PIPELINE
+  // 4. CLAIM DISPATCH & EXECUTION PIPELINE
   // =========================================================================
   async function dispatchClaim(payload) {
     btnSubmitClaim.disabled = true;
     btnSubmitClaim.textContent = 'Evaluating Policy...';
 
-    // Remove empty state placeholder
     if (activityEmptyState) {
       activityEmptyState.style.display = 'none';
     }
@@ -179,9 +398,14 @@
     }
 
     renderTransactionCard(resultTrace);
+    updateNovaActStream(
+      resultTrace.claim || payload,
+      resultTrace.verdict || resultTrace.status,
+      resultTrace.policy_verdict?.rule || resultTrace.policy_rule_triggered
+    );
 
     // If HITL triggered, show banner
-    if (resultTrace.verdict === 'PAUSED_HITL') {
+    if (resultTrace.verdict === 'PAUSED_HITL' || resultTrace.status === 'PAUSED_HITL') {
       showApprovalBanner(resultTrace);
     }
 
@@ -190,7 +414,7 @@
   }
 
   // =========================================================================
-  // 4. TRANSACTION CARD RENDERER (Clean, Scannable & Human-Centric)
+  // 5. TRANSACTION CARD RENDERER (Clean FinTech & Progressive Disclosure)
   // =========================================================================
   function renderTransactionCard(trace) {
     const card = document.createElement('article');
@@ -198,52 +422,64 @@
     card.id = `card-${trace.trace_id}`;
     cardMap[trace.trace_id] = card;
 
-    const vendor = trace.claim?.vendor || 'Unknown Vendor';
-    const emp = trace.claim?.employee_id || 'EMP-UNKNOWN';
-    const amount = Number(trace.claim?.amount || 0).toFixed(2);
+    const vendor = trace.claim?.vendor || trace.vendor || 'Unknown Vendor';
+    const emp = trace.claim?.employee_id || trace.employee_id || 'EMP-UNKNOWN';
+    const amount = Number(trace.claim?.amount || trace.amount || 0).toFixed(2);
     const latency = trace.guardrail_latency_ms ? `${trace.guardrail_latency_ms} ms` : '2.4 ms';
 
     // Time stamp [HH:mm:ss]
-    const now = new Date();
+    const now = trace.timestamp ? new Date(trace.timestamp) : new Date();
     const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+
+    // Determine verdict
+    const status = trace.verdict || trace.status || 'UNKNOWN';
 
     // Status Pill & Plain English description
     let pillHtml = '';
-    let verdictSummary = '';
+    let verdictSummary = trace.human_summary || '';
     let bullet1Class = 'step-done';
     let bullet2Class = 'step-done';
     let bullet3Class = 'step-done';
     let bullet3Label = 'Payout: Settled';
 
-    if (trace.verdict === 'PASSED' || trace.verdict === 'ALLOWED') {
+    if (status === 'PASSED' || status === 'ALLOWED') {
       pillHtml = `<span class="status-pill pill-approved">&#10003; Approved</span>`;
-      verdictSummary = `Auto-Approved: Amount ($${amount}) satisfies Rule #1 pre-authorized limit for verified vendor.`;
-    } else if (trace.verdict === 'PAUSED_HITL') {
+      if (!verdictSummary) {
+        verdictSummary = `Auto-Approved: Amount ($${amount}) satisfies Rule #1 pre-authorized limit for verified vendor.`;
+      }
+    } else if (status === 'PAUSED_HITL') {
       pillHtml = `<span class="status-pill pill-pending">&#9679; Needs Manager</span>`;
-      verdictSummary = `Manager Authorization Required: Amount ($${amount}) exceeds $500.00 auto-approval threshold. Execution halted under Rule #2.`;
+      if (!verdictSummary) {
+        verdictSummary = `Manager Authorization Required: Amount ($${amount}) exceeds $500.00 auto-approval threshold. Execution halted under Rule #2.`;
+      }
       bullet3Class = 'step-pause';
       bullet3Label = 'Payout: Awaiting Sign-off';
     } else {
       pillHtml = `<span class="status-pill pill-blocked">&#10005; Policy Blocked</span>`;
-      verdictSummary = `Blocked: ${trace.policy_verdict?.reason || 'Transaction terminated by deterministic pre-execution guardrail.'}`;
+      if (!verdictSummary) {
+        verdictSummary = `Blocked: ${trace.policy_verdict?.reason || trace.error || 'Transaction terminated by deterministic pre-execution guardrail.'}`;
+      }
       bullet3Class = 'step-block';
       bullet3Label = 'Payout: Aborted';
 
-      if (trace.policy_verdict?.rule === 'RULE_04_INJECTION_SHIELD') {
+      const rule = trace.policy_verdict?.rule || trace.policy_rule_triggered || '';
+      if (rule === 'RULE_04_INJECTION_SHIELD' || rule === 'INJECTION_SHIELD') {
         bullet1Class = 'step-block';
         bullet2Class = 'step-idle';
-      } else if (trace.policy_verdict?.rule === 'RULE_03_HARD_CAP_BLOCK') {
+      } else if (rule === 'RULE_03_HARD_CAP_BLOCK') {
         bullet2Class = 'step-block';
       }
     }
 
-    // Trace logs
+    // Step logs
     const steps = trace.steps || [];
     let logsHtml = '';
     steps.forEach((s) => {
-      logsHtml += `<div class="trace-log-line">[${timeStr}] TOOL: ${s.name}() &rarr; ${s.status} (${JSON.stringify(s.output || '')})</div>`;
+      const sName = s.step_name || s.name || 'TOOL_CALL';
+      const sDetails = s.details || JSON.stringify(s.output || '');
+      logsHtml += `<div class="trace-log-line">[${timeStr}] ${sName} &rarr; ${s.status} (${sDetails})</div>`;
     });
-    logsHtml += `<div class="trace-log-line">[${timeStr}] VERDICT: ${trace.verdict} (${trace.policy_verdict?.rule || ''})</div>`;
+    logsHtml += `<div class="trace-log-line">[${timeStr}] VERDICT: ${status} (${trace.policy_verdict?.rule || trace.policy_rule_triggered || ''})</div>`;
 
     card.innerHTML = `
       <div class="tx-card-header">
@@ -284,10 +520,12 @@
           <span class="accordion-chevron">&#9662;</span>
         </button>
         <div class="trace-accordion-content">
-          <div class="trace-logs-block tabular-nums">
-            ${logsHtml}
+          <div class="trace-accordion-inner">
+            <div class="trace-logs-block tabular-nums">
+              ${logsHtml}
+            </div>
+            <pre class="trace-json-box tabular-nums">${JSON.stringify(trace, null, 2)}</pre>
           </div>
-          <pre class="trace-json-box tabular-nums">${JSON.stringify(trace, null, 2)}</pre>
         </div>
       </div>
     `;
@@ -299,19 +537,21 @@
       accordion.classList.toggle('expanded');
     });
 
-    // Prepend card to activity stream (newest on top)
     activityStream.prepend(card);
   }
 
   // =========================================================================
-  // 5. HUMAN APPROVAL BANNER (HITL WORKFLOW)
+  // 6. HUMAN APPROVAL BANNER (HITL WORKFLOW)
   // =========================================================================
   function showApprovalBanner(trace) {
     activePendingHitlTrace = trace;
     hitlBannerId.textContent = trace.trace_id || 'TRC-HITL';
-    hitlBannerAmount.textContent = `$${Number(trace.claim?.amount || 0).toFixed(2)}`;
-    hitlBannerEntity.textContent = `${trace.claim?.vendor || 'Vendor'} · ${trace.claim?.employee_id || 'EMP'}`;
-    hitlBannerReason.textContent = trace.policy_verdict?.reason || 'Claim exceeds $500.00 auto-approval cap. Requires VP sign-off.';
+    const amountVal = trace.claim?.amount || trace.amount || 0;
+    hitlBannerAmount.textContent = `$${Number(amountVal).toFixed(2)}`;
+    const vName = trace.claim?.vendor || trace.vendor || 'Vendor';
+    const eName = trace.claim?.employee_id || trace.employee_id || 'EMP';
+    hitlBannerEntity.textContent = `${vName} · ${eName}`;
+    hitlBannerReason.textContent = trace.policy_verdict?.reason || trace.human_summary || 'Claim exceeds $500.00 auto-approval cap. Requires VP sign-off.';
 
     metricPendingApprovals.textContent = '1 Required';
     metricPendingApprovals.className = 'summary-value highlight-amber';
@@ -358,7 +598,7 @@
       }
     }
 
-    // Update the transaction card in the activity stream
+    // Update target card in the activity stream
     const targetCard = cardMap[traceId];
     if (targetCard) {
       const badgeGroup = targetCard.querySelector('.tx-amount-badge-group');
@@ -406,9 +646,11 @@
   btnHitlReject.addEventListener('click', () => resolveHitl('REJECT'));
 
   // =========================================================================
-  // 6. 1-CLICK JUDGE DEMO SCENARIOS
+  // 7. 1-CLICK JUDGE DEMO SCENARIOS
   // =========================================================================
   demoHappyPathBtn.addEventListener('click', () => {
+    demoHappyPathBtn.classList.add('active-running');
+    setTimeout(() => demoHappyPathBtn.classList.remove('active-running'), 1200);
     dispatchClaim({
       employee_id: 'EMP-104',
       vendor: 'AWS Cloud',
@@ -419,6 +661,8 @@
   });
 
   demoHitlPathBtn.addEventListener('click', () => {
+    demoHitlPathBtn.classList.add('active-running');
+    setTimeout(() => demoHitlPathBtn.classList.remove('active-running'), 1200);
     dispatchClaim({
       employee_id: 'EMP-219',
       vendor: 'Dell Enterprise',
@@ -429,6 +673,8 @@
   });
 
   demoViolationPathBtn.addEventListener('click', () => {
+    demoViolationPathBtn.classList.add('active-running');
+    setTimeout(() => demoViolationPathBtn.classList.remove('active-running'), 1200);
     dispatchClaim({
       employee_id: 'EMP-666',
       vendor: 'Shell Vendor LLC',
@@ -490,7 +736,7 @@
   });
 
   // =========================================================================
-  // 7. BENCHMARK SCORECARD (20 CASES)
+  // 8. BENCHMARK SCORECARD (20 CASES)
   // =========================================================================
   async function runBenchmark() {
     btnRunEval.disabled = true;
@@ -532,22 +778,23 @@
     evalData.cases.forEach((tc) => {
       const tr = document.createElement('tr');
 
-      const isBaselineUnsafe = tc.baseline.includes('UNSAFE');
+      const isBaselineUnsafe = String(tc.baseline).includes('UNSAFE');
       const baselineBadge = isBaselineUnsafe
         ? `<span class="status-pill pill-blocked" style="font-size: 11px;">${tc.baseline}</span>`
         : `<span class="status-pill pill-approved" style="font-size: 11px;">${tc.baseline}</span>`;
 
-      const aegisClass = tc.aegis === 'ALLOWED' ? 'pill-approved' : tc.aegis === 'PAUSED_HITL' ? 'pill-pending' : 'pill-blocked';
-      const aegisBadge = `<span class="status-pill ${aegisClass}" style="font-size: 11px;">${tc.aegis}</span>`;
+      const aegisVal = tc.aegis || tc.aegis_result || 'ALLOWED';
+      const aegisClass = aegisVal === 'ALLOWED' ? 'pill-approved' : aegisVal === 'PAUSED_HITL' ? 'pill-pending' : 'pill-blocked';
+      const aegisBadge = `<span class="status-pill ${aegisClass}" style="font-size: 11px;">${aegisVal}</span>`;
 
       tr.innerHTML = `
-        <td class="tc-id">${tc.id}</td>
+        <td class="tc-id">${tc.id || tc.test_id}</td>
         <td><span style="font-weight: 600; color: var(--text-secondary);">${tc.category}</span></td>
         <td>
-          <div style="font-weight: 600; color: var(--text-primary);">${tc.vendor}</div>
-          <div style="font-size: 11px; color: var(--text-muted);">${tc.notes}</div>
+          <div style="font-weight: 600; color: var(--text-primary);">${tc.vendor || tc.claim?.vendor || 'Entity'}</div>
+          <div style="font-size: 11px; color: var(--text-muted);">${tc.notes || tc.claim?.notes || ''}</div>
         </td>
-        <td class="tc-amount tabular-nums">$${Number(tc.amount).toFixed(2)}</td>
+        <td class="tc-amount tabular-nums">$${Number(tc.amount || tc.claim?.amount || 0).toFixed(2)}</td>
         <td>${baselineBadge}</td>
         <td>${aegisBadge}</td>
         <td><span class="status-pill pill-approved" style="font-size: 11px;">100% Enforced</span></td>
@@ -559,13 +806,16 @@
 
   btnRunEval.addEventListener('click', runBenchmark);
 
-  // Keyboard Shortcuts (1-4)
+  // Keyboard Shortcuts (1-4 for Demos, o/r/b for Tabs)
   document.addEventListener('keydown', (e) => {
     if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
     if (e.key === '1') demoHappyPathBtn.click();
     if (e.key === '2') demoHitlPathBtn.click();
     if (e.key === '3') demoViolationPathBtn.click();
     if (e.key === '4') demoOutagePathBtn.click();
+    if (e.key.toLowerCase() === 'o') switchTab('operations');
+    if (e.key.toLowerCase() === 'r') switchTab('runtime');
+    if (e.key.toLowerCase() === 'b') switchTab('benchmark');
   });
 
   // Initialization
@@ -579,7 +829,8 @@
     dispatchClaim,
     resolveHitl,
     toggleOutage,
-    runBenchmark
+    runBenchmark,
+    switchTab
   };
 
 })();
